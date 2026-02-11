@@ -1,0 +1,18 @@
+import torch
+from torch.utils.data import Dataset
+
+class EEGLLMDataset(Dataset):
+    def __init__(self, eeg_data, llm_data, labels):
+        self.eeg_data = eeg_data
+        self.llm_data = llm_data
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        eeg = torch.tensor(self.eeg_data[idx], dtype=torch.float32)
+        llm = torch.tensor(self.llm_data[idx], dtype=torch.float32)
+        label = torch.tensor(self.labels[idx], dtype=torch.float32)
+
+        return eeg, llm, label

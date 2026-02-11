@@ -1,0 +1,48 @@
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from models.fusion_mha import MHA_Fusion
+from dataset import EEGLLMDataset
+import numpy as np
+
+# Dummy data (replace with real dataset)
+num_samples = 200
+eeg_dim = 64
+llm_dim = 128
+
+eeg_data = np.random.randn(num_samples, eeg_dim)
+llm_data = np.random.randn(num_samples, llm_dim)
+labels = np.random.randint(0, 2, num_samples)
+
+dataset = EEGLLMDataset(eeg_data, llm_data, labels)
+loader = DataLoader(dataset, batch_size=16, shuffle=True)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model = MHA_Fusion(eeg_dim, llm_dim).to(device)
+criterion = nn.BCELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+epochs = 10
+
+for epoch in range(epochs):
+    model.train()
+    total_loss = 0
+
+    for eeg_w, llm_w, label in loader:
+
+        eeg_w = eeg_w.to(device)
+        llm_w = llm_w.to(device)
+        label = label.to(device)
+
+        optimizer.zero_grad()
+
+        pred, _ = model(eeg_w, llm_w)
+
+        loss = criterion(pred.squeeze(), label)
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    print(f"Epoch {epoch+1}, Loss: {total_loss/len(loader):.4f}")
